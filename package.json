@@ -1,13 +1,13 @@
 {
   "name": "pixlated",
+  "version": "2.1.0",
   "description": "Lightweight web components that add noise textures to images and backgrounds using Canvas API",
-  "version": "2.0.4",
   "type": "module",
   "homepage": "https://pixlated.vercel.app/",
   "main": "src/pixlated.js",
   "exports": {
     ".": "./src/pixlated.js",
-    "./bg": "./src/pixlated-bg.js"
+    "./pixlated-bg": "./src/pixlated-bg.js"
   },
   "repository": {
     "type": "git",
