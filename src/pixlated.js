@@ -64,11 +64,17 @@ class PixlatedImage extends HTMLElement {
         this.img.onerror = (e) => this._handleImageError(e);
         this.altText = '';
         this.errorMessage = '';
+        
+        this._noiseOffsetX = 0;
+        this._noiseOffsetY = 0;
+        this._isAnimating = false;
+        this._animationFrame = null;
+        this._lastFrameTime = 0;
     }
 
     // When these attributes change, attributeChangedCallback will be called.
     static get observedAttributes() {
-        return ['src', 'intensity', 'width', 'height', 'alt'];
+        return ['src', 'intensity', 'width', 'height', 'alt', 'animated'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -104,6 +110,16 @@ class PixlatedImage extends HTMLElement {
                 this.altText = newValue;
                 this.updateAriaAttributes();
                 break;
+            case 'animated':
+                if (newValue !== null) {
+                    this._startAnimation();
+                } else {
+                    this._stopAnimation();
+                    this._noiseOffsetX = 0;
+                    this._noiseOffsetY = 0;
+                    if (this.isConnected) this.drawGrainyImage();
+                }
+                break;
         }
     }
 
@@ -130,6 +146,14 @@ class PixlatedImage extends HTMLElement {
             this._log('error', '"src" attribute is required.');
             this.drawPlaceholder();
         }
+
+        if (this.hasAttribute('animated')) {
+            this._startAnimation();
+        }
+    }
+
+    disconnectedCallback() {
+        this._stopAnimation();
     }
 
     drawPlaceholder() {
@@ -179,7 +203,7 @@ class PixlatedImage extends HTMLElement {
 
         if (intensity > 0) {
             const imageData = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-            applyNoise(imageData, intensity);
+            applyNoise(imageData, intensity, this._noiseOffsetX, this._noiseOffsetY);
             this.ctx.putImageData(imageData, 0, 0);
         }
     }
@@ -251,6 +275,33 @@ class PixlatedImage extends HTMLElement {
             case 'debug':
                 console.log(`${prefix} [DEBUG] ${message}`);
                 break;
+        }
+    }
+
+    _startAnimation() {
+        if (this._isAnimating) return;
+        this._isAnimating = true;
+        this._lastFrameTime = performance.now();
+        
+        this._animationLoop = (timestamp) => {
+            if (!this._isAnimating) return;
+            
+            if (timestamp - this._lastFrameTime >= 80) {
+                this._noiseOffsetX = Math.floor(Math.random() * 256);
+                this._noiseOffsetY = Math.floor(Math.random() * 256);
+                this.drawGrainyImage();
+                this._lastFrameTime = timestamp;
+            }
+            this._animationFrame = requestAnimationFrame(this._animationLoop);
+        };
+        this._animationFrame = requestAnimationFrame(this._animationLoop);
+    }
+
+    _stopAnimation() {
+        this._isAnimating = false;
+        if (this._animationFrame) {
+            cancelAnimationFrame(this._animationFrame);
+            this._animationFrame = null;
         }
     }
 

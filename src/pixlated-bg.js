@@ -21,6 +21,11 @@ class PixlatedBg extends HTMLElement {
         }
 
         this._resizeRAF = null;
+        this._noiseOffsetX = 0;
+        this._noiseOffsetY = 0;
+        this._isAnimating = false;
+        this._animationFrame = null;
+        this._lastFrameTime = 0;
 
         this.styleEl = document.createElement('style');
         this.styleEl.textContent = `
@@ -51,7 +56,7 @@ class PixlatedBg extends HTMLElement {
     }
 
     static get observedAttributes() {
-        return ['color', 'intensity', 'width', 'height'];
+        return ['color', 'intensity', 'width', 'height', 'animated'];
     }
 
     attributeChangedCallback(name, oldValue, newValue) {
@@ -66,6 +71,16 @@ class PixlatedBg extends HTMLElement {
             case 'height':
                 this.updateCanvasSize();
                 if (this.isConnected) this.drawGrainyBackground();
+                break;
+            case 'animated':
+                if (newValue !== null) {
+                    this._startAnimation();
+                } else {
+                    this._stopAnimation();
+                    this._noiseOffsetX = 0;
+                    this._noiseOffsetY = 0;
+                    if (this.isConnected) this.drawGrainyBackground();
+                }
                 break;
         }
     }
@@ -83,6 +98,10 @@ class PixlatedBg extends HTMLElement {
             });
         });
         this.resizeObserver.observe(this);
+
+        if (this.hasAttribute('animated')) {
+            this._startAnimation();
+        }
     }
 
     disconnectedCallback() {
@@ -93,6 +112,7 @@ class PixlatedBg extends HTMLElement {
             cancelAnimationFrame(this._resizeRAF);
             this._resizeRAF = null;
         }
+        this._stopAnimation();
     }
 
     updateCanvasSize() {
@@ -136,13 +156,40 @@ class PixlatedBg extends HTMLElement {
 
         if (intensity > 0) {
             const imageData = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-            applyNoise(imageData, intensity);
+            applyNoise(imageData, intensity, this._noiseOffsetX, this._noiseOffsetY);
             this.ctx.putImageData(imageData, 0, 0);
         }
     }
 
     reload() {
         this.drawGrainyBackground();
+    }
+
+    _startAnimation() {
+        if (this._isAnimating) return;
+        this._isAnimating = true;
+        this._lastFrameTime = performance.now();
+        
+        this._animationLoop = (timestamp) => {
+            if (!this._isAnimating) return;
+            
+            if (timestamp - this._lastFrameTime >= 80) {
+                this._noiseOffsetX = Math.floor(Math.random() * 256);
+                this._noiseOffsetY = Math.floor(Math.random() * 256);
+                this.drawGrainyBackground();
+                this._lastFrameTime = timestamp;
+            }
+            this._animationFrame = requestAnimationFrame(this._animationLoop);
+        };
+        this._animationFrame = requestAnimationFrame(this._animationLoop);
+    }
+
+    _stopAnimation() {
+        this._isAnimating = false;
+        if (this._animationFrame) {
+            cancelAnimationFrame(this._animationFrame);
+            this._animationFrame = null;
+        }
     }
 
     getConfig() {

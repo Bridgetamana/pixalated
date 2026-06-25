@@ -91,7 +91,8 @@ Add noise texture to images:
 | Attribute | Default | Description |
 |-----------|---------|-------------|
 | `src`  | required | Image URL|
-| `intensity`  | 0.1 | Noise intensity from 0 to 1 |
+| `intensity` | 0.1 | Noise intensity from 0 to 1 |
+| `animated` | false | If present, the grain will animate to simulate real film grain |
 | `width`  | 400 | Canvas width in pixels |
 | `height`  | 400 | Canvas height in pixels |
 | `alt`  | optional | Alternative text for accessibility |
@@ -113,6 +114,7 @@ Add noise texture to backgrounds:
 |-----------|---------|-------------|
 | `intensity` | 0.1 | Noise intensity from 0 to 1 |
 | `color` | #09090b | Background color |
+| `animated` | false | If present, the grain will animate to simulate real film grain |
 | `width` | auto-sizes | Fixed width in pixels |
 | `height` | auto-sizes | Fixed height in pixels |
 

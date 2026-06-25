@@ -190,6 +190,10 @@
             />
             <span class="value-display" id="intensityValue">0.5</span>
           </div>
+          <div class="control-group" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+            <input type="checkbox" id="animatedToggle" style="width: auto; height: auto;" />
+            <label for="animatedToggle" style="position: static; color: var(--foreground);">Animated Grain</label>
+          </div>
           <input
             type="file"
             id="imageUpload"
@@ -293,6 +297,10 @@
             />
             <span class="value-display" id="bgIntensityValue">0.2</span>
           </div>
+          <div class="control-group" style="display: flex; align-items: center; gap: 0.5rem; justify-content: center;">
+            <input type="checkbox" id="bgAnimatedToggle" style="width: auto; height: auto;" />
+            <label for="bgAnimatedToggle" style="position: static; color: var(--foreground);">Animated Grain</label>
+          </div>
           <div class="code-example">
             <button
               class="copy"
@@ -394,6 +402,8 @@
       const intensityValue = document.getElementById("intensityValue");
       const bgIntensitySlider = document.getElementById("bgIntensitySlider");
       const bgIntensityValue = document.getElementById("bgIntensityValue");
+      const animatedToggle = document.getElementById("animatedToggle");
+      const bgAnimatedToggle = document.getElementById("bgAnimatedToggle");
       const copyBtns = document.querySelectorAll("button.copy");
 
       const saveTheme = (isDark) => {
@@ -410,6 +420,22 @@
         const value = e.target.value;
         bgIntensityValue.textContent = value;
         demoBg.setAttribute("intensity", value);
+      });
+
+      animatedToggle.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          demoImage.setAttribute("animated", "");
+        } else {
+          demoImage.removeAttribute("animated");
+        }
+      });
+
+      bgAnimatedToggle.addEventListener("change", (e) => {
+        if (e.target.checked) {
+          demoBg.setAttribute("animated", "");
+        } else {
+          demoBg.removeAttribute("animated");
+        }
       });
 
       darkToggle.addEventListener("click", () => {

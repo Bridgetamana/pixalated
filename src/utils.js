@@ -55,11 +55,13 @@ export function refreshNoiseTile() {
 }
 
 /**
- * @param {ImageData} imageData 
- * @param {number} intensity 
+ * @param {ImageData} imageData
+ * @param {number} intensity
+ * @param {number} [offsetX=0]
+ * @param {number} [offsetY=0]
  * @returns {ImageData}
  */
-export function applyNoise(imageData, intensity) {
+export function applyNoise(imageData, intensity, offsetX = 0, offsetY = 0) {
     const data = imageData.data;
     const clampedIntensity = Math.max(0, Math.min(1, intensity));
 
@@ -74,7 +76,7 @@ export function applyNoise(imageData, intensity) {
         const pixelIndex = i >> 2;
         const x = pixelIndex % width;
         const y = (pixelIndex / width) | 0;
-        const tileIndex = (y % tileSize) * tileSize + (x % tileSize);
+        const tileIndex = ((y + offsetY) % tileSize) * tileSize + ((x + offsetX) % tileSize);
 
         const noise = tileData[tileIndex] * clampedIntensity;
         data[i] += noise;
