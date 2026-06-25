@@ -3,29 +3,7 @@
  * Adds film grain and noise textures to backgrounds using Canvas API
  */
 
-function applyNoiseToBg(imageData, intensity) {
-    const data = imageData.data;
-    const clampedIntensity = Math.max(0, Math.min(1, intensity));
-
-    for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * 255 * clampedIntensity;
-        data[i] = Math.max(0, Math.min(255, data[i] + noise));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
-    }
-
-    return imageData;
-}
-
-function clampBgIntensity(value, defaultValue) {
-    if (defaultValue === undefined) defaultValue = 0.1;
-    if (value === null || value === undefined || isNaN(value)) {
-        return defaultValue;
-    }
-    if (value < 0) return 0;
-    if (value > 1) return 1;
-    return value;
-}
+import { applyNoise, clampIntensity } from './utils.js';
 
 class PixlatedBg extends HTMLElement {
     static DEBUG = false;
@@ -41,6 +19,8 @@ class PixlatedBg extends HTMLElement {
             console.error('<pixlated-bg>: Canvas 2D context not supported');
             return;
         }
+
+        this._resizeRAF = null;
 
         this.styleEl = document.createElement('style');
         this.styleEl.textContent = `
@@ -95,8 +75,12 @@ class PixlatedBg extends HTMLElement {
         this.drawGrainyBackground();
 
         this.resizeObserver = new ResizeObserver(() => {
-            this.updateCanvasSize();
-            this.drawGrainyBackground();
+            if (this._resizeRAF) cancelAnimationFrame(this._resizeRAF);
+            this._resizeRAF = requestAnimationFrame(() => {
+                this.updateCanvasSize();
+                this.drawGrainyBackground();
+                this._resizeRAF = null;
+            });
         });
         this.resizeObserver.observe(this);
     }
@@ -104,6 +88,10 @@ class PixlatedBg extends HTMLElement {
     disconnectedCallback() {
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
+        }
+        if (this._resizeRAF) {
+            cancelAnimationFrame(this._resizeRAF);
+            this._resizeRAF = null;
         }
     }
 
@@ -138,7 +126,7 @@ class PixlatedBg extends HTMLElement {
 
         const color = this.getAttribute('color') || '#09090b';
         const rawIntensity = parseFloat(this.getAttribute('intensity'));
-        const intensity = clampBgIntensity(rawIntensity, 0.1);
+        const intensity = clampIntensity(rawIntensity, 0.1);
 
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
@@ -148,8 +136,8 @@ class PixlatedBg extends HTMLElement {
 
         if (intensity > 0) {
             const imageData = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-            const noisyData = applyNoiseToBg(imageData, intensity);
-            this.ctx.putImageData(noisyData, 0, 0);
+            applyNoise(imageData, intensity);
+            this.ctx.putImageData(imageData, 0, 0);
         }
     }
 
@@ -161,7 +149,7 @@ class PixlatedBg extends HTMLElement {
         const rawIntensity = parseFloat(this.getAttribute('intensity'));
         return {
             color: this.getAttribute('color') || '#09090b',
-            intensity: clampBgIntensity(rawIntensity, 0.1),
+            intensity: clampIntensity(rawIntensity, 0.1),
             width: this.canvas.width,
             height: this.canvas.height
         };

@@ -3,29 +3,7 @@
  * Adds film grain and noise textures to images using Canvas API
  */
 
-function applyNoiseToImage(imageData, intensity) {
-    const data = imageData.data;
-    const clampedIntensity = Math.max(0, Math.min(1, intensity));
-
-    for (let i = 0; i < data.length; i += 4) {
-        const noise = (Math.random() - 0.5) * 255 * clampedIntensity;
-        data[i] = Math.max(0, Math.min(255, data[i] + noise));
-        data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
-        data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
-    }
-
-    return imageData;
-}
-
-function clampImageIntensity(value, defaultValue) {
-    if (defaultValue === undefined) defaultValue = 0.1;
-    if (value === null || value === undefined || isNaN(value)) {
-        return defaultValue;
-    }
-    if (value < 0) return 0;
-    if (value > 1) return 1;
-    return value;
-}
+import { applyNoise, clampIntensity, refreshNoiseTile } from './utils.js';
 
 class PixlatedImage extends HTMLElement {
     static DEBUG = false;
@@ -192,7 +170,7 @@ class PixlatedImage extends HTMLElement {
         }
 
         const rawIntensity = parseFloat(this.getAttribute('intensity'));
-        const intensity = clampImageIntensity(rawIntensity, 0.1);
+        const intensity = clampIntensity(rawIntensity, 0.1);
         const canvasWidth = this.canvas.width;
         const canvasHeight = this.canvas.height;
 
@@ -201,8 +179,8 @@ class PixlatedImage extends HTMLElement {
 
         if (intensity > 0) {
             const imageData = this.ctx.getImageData(0, 0, canvasWidth, canvasHeight);
-            const noisyData = applyNoiseToImage(imageData, intensity);
-            this.ctx.putImageData(noisyData, 0, 0);
+            applyNoise(imageData, intensity);
+            this.ctx.putImageData(imageData, 0, 0);
         }
     }
 
@@ -289,6 +267,7 @@ class PixlatedImage extends HTMLElement {
     }
 
     reload() {
+        refreshNoiseTile();
         if (this.img.src && this.img.complete) {
             this.drawGrainyImage();
         } else if (this.img.src) {
@@ -300,7 +279,7 @@ class PixlatedImage extends HTMLElement {
         const rawIntensity = parseFloat(this.getAttribute('intensity'));
         return {
             src: this.getAttribute('src'),
-            intensity: clampImageIntensity(rawIntensity, 0.1),
+            intensity: clampIntensity(rawIntensity, 0.1),
             width: this.canvas.width,
             height: this.canvas.height,
             alt: this.altText

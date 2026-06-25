@@ -44,20 +44,20 @@ npm install pixlated
 Load both components
 
 ```html
-<script src="https://unpkg.com/pixlated/src/pixlated.js"></script>
-<script src="https://unpkg.com/pixlated/src/pixlated-bg.js"></script>
+<script type="module" src="https://unpkg.com/pixlated/src/pixlated.js"></script>
+<script type="module" src="https://unpkg.com/pixlated/src/pixlated-bg.js"></script>
 ```
 
 Or load individually:
 
 ```html
 <!-- Just image component -->
-<script src="https://unpkg.com/pixlated/src/pixlated.js"></script>
+<script type="module" src="https://unpkg.com/pixlated/src/pixlated.js"></script>
 ```
 
 ```html
 <!-- Just background component -->
-<script src="https://unpkg.com/pixlated/src/pixlated-bg.js"></script>
+<script type="module" src="https://unpkg.com/pixlated/src/pixlated-bg.js"></script>
 ```
 
 ## Usage
